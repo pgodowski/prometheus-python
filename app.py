@@ -12,14 +12,15 @@ REQUESTS = Counter('http_requests_total', 'Total HTTP Requests (count)', ['metho
 # A gauge (i.e. goes up and down) to monitor the total number of in progress requests
 IN_PROGRESS = Gauge('http_requests_inprogress', 'Number of in progress HTTP requests')
 
-# A histogram to measure the latency of the HTTP requests
-TIMINGS = Histogram('http_request_duration_seconds', 'HTTP request latency (seconds)')
+
+APPPOINTS = Gauge('appoints_total', 'Maximo AppPoints Total', ['metric_type', 'product_id', 'product_name', 'product_metric'])
+APPPOINTS_BREAKDOWN = Gauge('appoints_by_capability', 'Maximo AppPoints Breakdown', ['parent', 'category', 'metric_type', 'product_id', 'product_name', 'product_metric', 'value_name'])
+
+appoints_val = 1
 
 
 # Standard Flask route stuff.
 @app.route('/')
-# Helper annotation to measure how long a method takes and save as a histogram metric.
-@TIMINGS.time()
 # Helper annotation to increment a gauge when entering the method and decrementing when leaving.
 @IN_PROGRESS.track_inprogress()
 def hello_world():
@@ -28,7 +29,6 @@ def hello_world():
 
 # Note I'm intentionally failing occasionally to simulate a flakey service.
 @app.route('/slow')
-@TIMINGS.time()
 @IN_PROGRESS.track_inprogress()
 def slow_request():
     v = random.expovariate(1.0 / 1.3)
@@ -42,7 +42,6 @@ def slow_request():
 
 @app.route('/hello/<name>')
 @IN_PROGRESS.track_inprogress()
-@TIMINGS.time()
 def index(name):
     REQUESTS.labels(method='GET', endpoint="/hello/<name>", status_code=200).inc()
     return render_template_string('<b>Hello {{name}}</b>!', name=name)
@@ -50,9 +49,14 @@ def index(name):
 
 @app.route('/metrics')
 @IN_PROGRESS.track_inprogress()
-@TIMINGS.time()
 def metrics():
     REQUESTS.labels(method='GET', endpoint="/metrics", status_code=200).inc()
+    global appoints_val
+    appoints_val += 1
+    APPPOINTS.labels(metric_type='adoption', product_id='123', product_name='Maximo', product_metric='AppPoints').set(appoints_val)
+    APPPOINTS_BREAKDOWN.labels(metric_type='adoption', product_id='123', product_name='Maximo', product_metric='AppPoints', parent='appoints_total', category='capability', value_name='Capability 1').set(appoints_val-1)
+    APPPOINTS_BREAKDOWN.labels(metric_type='adoption', product_id='123', product_name='Maximo', product_metric='AppPoints', parent='appoints_total', category='capability', value_name='Capability 2').set(1)
+
     return generate_latest(REGISTRY)
 
 
