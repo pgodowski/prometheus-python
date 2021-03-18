@@ -13,8 +13,8 @@ REQUESTS = Counter('http_requests_total', 'Total HTTP Requests (count)', ['metho
 IN_PROGRESS = Gauge('http_requests_inprogress', 'Number of in progress HTTP requests')
 
 
-APPPOINTS = Gauge('appoints_total', 'Maximo AppPoints Total', ['metric_type', 'product_id', 'product_name', 'product_metric'])
-APPPOINTS_BREAKDOWN = Gauge('appoints_by_capability', 'Maximo AppPoints Breakdown', ['parent', 'category', 'metric_type', 'product_id', 'product_name', 'product_metric', 'value_name'])
+APPPOINTS = Gauge('appoints_total', 'Maximo AppPoints Total', ['metricType', 'productId', 'productName', 'metricId', 'metricGroupId'])
+APPPOINTS_BREAKDOWN = Gauge('appoints_by_capability', 'Maximo AppPoints Breakdown', ['parentMetricGroupId', 'category', 'metricType', 'productId', 'productName', 'metricId', 'valueName'])
 
 appoints_val = 1
 
@@ -53,9 +53,9 @@ def metrics():
     REQUESTS.labels(method='GET', endpoint="/metrics", status_code=200).inc()
     global appoints_val
     appoints_val += 1
-    APPPOINTS.labels(metric_type='adoption', product_id='123', product_name='Maximo', product_metric='AppPoints').set(appoints_val)
-    APPPOINTS_BREAKDOWN.labels(metric_type='adoption', product_id='123', product_name='Maximo', product_metric='AppPoints', parent='appoints_total', category='capability', value_name='Capability 1').set(appoints_val-1)
-    APPPOINTS_BREAKDOWN.labels(metric_type='adoption', product_id='123', product_name='Maximo', product_metric='AppPoints', parent='appoints_total', category='capability', value_name='Capability 2').set(1)
+    APPPOINTS.labels(metricType='adoption', productId='123', productName='Maximo', metricId='AppPoints', metricGroupId='apppoints_total').set(appoints_val)
+    APPPOINTS_BREAKDOWN.labels(metricType='adoption', productId='123', productName='Maximo', metricId='AppPoints', parentMetricGroupId='apppoints_total', category='capability', valueName='Capability 1').set(appoints_val-1)
+    APPPOINTS_BREAKDOWN.labels(metricType='adoption', productId='123', productName='Maximo', metricId='AppPoints', parentMetricGroupId='apppoints_total', category='capability', valueName='Capability 2').set(1)
 
     return generate_latest(REGISTRY)
 
